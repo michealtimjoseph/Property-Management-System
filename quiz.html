@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Systems Flashcard Quiz</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            width: 100%;
+            max-width: 650px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+        }
+        .progress, .score-track {
+            font-size: 0.9em;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .category-tag {
+            display: inline-block;
+            background-color: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .question-text {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option-btn {
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px 18px;
+            text-align: left;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #334155;
+            font-weight: 500;
+        }
+        .option-btn:hover:not([disabled]) {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        .option-btn:focus {
+            outline: none;
+        }
+        /* State Colors */
+        .option-btn.correct {
+            background-color: #dcfce7 !important;
+            border-color: #22c55e !important;
+            color: #15803d !important;
+        }
+        .option-btn.incorrect {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #b91c1c !important;
+        }
+        .feedback-panel {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .feedback-panel.correct-msg {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border-left: 5px solid #10b981;
+        }
+        .feedback-panel.incorrect-msg {
+            background-color: #fff5f5;
+            color: #9b2c2c;
+            border-left: 5px solid #f56565;
+        }
+        .action-container {
+            margin-top: 25px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .next-btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            display: none;
+            transition: background 0.2s;
+        }
+        .next-btn:hover {
+            background-color: #2563eb;
+        }
+        /* Results View */
+        .results-view {
+            text-align: center;
+            display: none;
+            padding: 20px 0;
+        }
+        .results-score {
+            font-size: 3em;
+            font-weight: 800;
+            color: #3b82f6;
+            margin: 10px 0;
+        }
+        .results-comment {
+            font-size: 1.2em;
+            color: #475569;
+            margin-bottom: 25px;
+        }
+        .restart-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .restart-btn:hover {
+            background-color: #059669;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="quiz-box">
+        <div class="header">
+            <span class="title">Database Systems Quiz</span>
+            <div>
+                <span class="score-track" id="score-display">Score: 0</span> &nbsp;|&nbsp;
+                <span class="progress" id="progress-display">Question 1/100</span>
+            </div>
+        </div>
+        
+        <div class="category-tag" id="category-display">Category</div>
+        <div class="question-text" id="question-display">Loading question...</div>
+        
+        <div class="options-container" id="options-box">
+            </div>
+
+        <div class="feedback-panel" id="feedback-box"></div>
+        
+        <div class="action-container">
+            <button class="next-btn" id="next-button" onclick="loadNextQuestion()">Next Question &rarr;</button>
+        </div>
+    </div>
+
+    <div id="results-box" class="results-view">
+        <h2>Quiz Completed!</h2>
+        <p>Your ultimate tracking performance evaluation summary:</p>
+        <div class="results-score" id="final-score-display">0 / 100</div>
+        <div class="results-comment" id="final-comment-display">Keep studying!</div>
+        <button class="restart-btn" onclick="restartQuiz()">Restart Master Quiz</button>
+    </div>
+</div>
+
+<script>
+    // Comprehensive 100-item Master Database containing questions matching your exact course material parameters
+    const quizData = [
+        // SECTION 1: DML
+        { q: "Which of the following commands belongs to the Data Manipulation Language (DML)?", a: "UPDATE", o: ["CREATE", "UPDATE", "DROP", "GRANT"], c: "Data Manipulation Language (DML)" },
+        { q: "What is the fundamental purpose of the INSERT statement in SQL?", a: "To add data rows into an existing table", o: ["To add data rows into an existing table", "To construct a completely new database table", "To alter structural properties of a column", "To display records matching selected filters"], c: "Data Manipulation Language (DML)" },
+        { q: "If you run an UPDATE statement without a WHERE clause, what will happen?", a: "The changes will be systematically applied to all rows in the table", o: ["The execution will fail with a syntax error", "Only the first row of the table will be modified", "The changes will be systematically applied to all rows in the table", "The table structure will be deleted"], c: "Data Manipulation Language (DML)" },
+        { q: "Which keyword is paired with the UPDATE statement to specify the new column value assignments?", a: "SET", o: ["VALUES", "INTO", "FROM", "SET"], c: "Data Manipulation Language (DML)" },
+        { q: "What happens when you execute a DELETE FROM statement without specifying a WHERE clause constraint?", a: "All records will be wiped out from the target table", o: ["The database safely drops the table structure entirely", "All records will be wiped out from the target table", "The query halts safely and asks for user confirmation", "Only rows containing empty or NULL values are dropped"], c: "Data Manipulation Language (DML)" },
+        { q: "Which SQL statement lets you copy row chunks from one table and directly feed them into another table structural counterpart?", a: "INSERT INTO ... SELECT", o: ["INSERT INTO ... SELECT", "UPDATE FROM ... JOIN", "MERGE INTO ... VIEW", "SELECT INTO ... VALUES"], c: "Data Manipulation Language (DML)" },
+        { q: "When inserting optional or partial column values into a table row, what must follow the INSERT INTO table_name expression?", a: "An explicit comma-separated list of target columns inside parentheses", o: ["A WHERE filter constraint list", "The specific row indexes to append to", "An explicit comma-separated list of target columns inside parentheses", "The data type specifications for every column"], c: "Data Manipulation Language (DML)" },
+        { q: "What type of values will unspecified columns inherit if an explicit INSERT statement ignores them during a partial row insertion?", a: "NULL values or their predefined structural DEFAULT properties", o: ["Zero or blank strings automatically", "Random incremental unique integers", "Primary Key references from linked child records", "NULL values or their predefined structural DEFAULT properties"], c: "Data Manipulation Language (DML)" },
+        { q: "In an UPDATE command statement, what symbol or character splits multiple column name and value pairing declarations?", a: "Comma (,)", o: ["Comma (,)", "Ampersand (&)", "Semicolon (;)", "Keyword AND"], c: "Data Manipulation Language (DML)" },
+        { q: "DML expressions process changes impacting what underlying structural components of relational systems?", a: "Row and column record data instances", o: ["Database schemas, catalogs, and indexing trees", "Row and column record data instances", "Account authorization roles and firewall privileges", "System transaction logs and backup timelines"], c: "Data Manipulation Language (DML)" },
+
+        // SECTION 2: SELECT & CLAUSES
+        { q: "Which SQL command statement acts as the foundational mechanism to display, pull, or list data records?", a: "SELECT", o: ["LIST", "DISPLAY", "SELECT", "OUTPUT"], c: "Select, Clauses, and Operators" },
+        { q: "What wildcard symbol represents 'all columns' when built inside a typical standard SELECT statement block?", a: "Asterisk (*)", o: ["Asterisk (*)", "Percent (%)", "Question Mark (?)", "Dollar sign ($)"], c: "Select, Clauses, and Operators" },
+        { q: "Which standard clause lets database query designers apply specific filter restrictions on returned rows?", a: "WHERE", o: ["GROUP BY", "WHERE", "HAVING", "ORDER BY"], c: "Select, Clauses, and Operators" },
+        { q: "To organize or arrange your output records into alphabetical or numerical sorting sequences, you use:", a: "ORDER BY", o: ["SORT BY", "GROUP BY", "ARRANGE BY", "ORDER BY"], c: "Select, Clauses, and Operators" },
+        { q: "The GROUP BY clause is primarily combined with which types of database functions?", a: "Aggregate functions like SUM, COUNT, and AVG", o: ["Aggregate functions like SUM, COUNT, and AVG", "Structural DDL alter validations", "Date conversion format strings", "Regular expression string wildcards"], c: "Select, Clauses, and Operators" },
+        { q: "What makes the HAVING clause functionally unique compared to a basic WHERE clause block?", a: "It applies filter conditions to grouped summary values generated by aggregate functions", o: ["It filters table names instead of data rows", "It must execute before any table joins can process", "It applies filter conditions to grouped summary values generated by aggregate functions", "It cannot be used with numerical comparison operators"], c: "Select, Clauses, and Operators" },
+        { q: "Which operator lets you safely check if a target row column holds no data values or contains missing entries?", a: "IS NULL", o: ["= NULL", "IS NULL", "== EMPTY", "IN (NULL)"], c: "Select, Clauses, and Operators" },
+        { q: "What relational set operator merges matching column row datasets across dual queries but drops duplicate entries from output views?", a: "UNION", o: ["UNION ALL", "INTERSECT", "MINUS", "UNION"], c: "Select, Clauses, and Operators" },
+        { q: "How does UNION ALL differ from the classic UNION relational set operator operation?", a: "It preserves and displays all duplicate row records found across both query expressions", o: ["It preserves and displays all duplicate row records found across both query expressions", "It displays only the rows that are shared between both datasets", "It converts character sets to uppercase structures automatically", "It executes slower because it must perform an explicit sort operation"], c: "Select, Clauses, and Operators" },
+        { q: "The INTERSECT set operator acts as a mechanism that extracts what records from targeted query statements?", a: "Only identical records that are common to both SELECT statements", o: ["Records existing in the first SELECT statement but missing from the second", "Every record generated by both statements including non-matching variations", "Only identical records that are common to both SELECT statements", "Records that contain completely unique values in both systems"], c: "Select, Clauses, and Operators" },
+
+        // SECTION 3: ALIAS & VIEWS
+        { q: "What is an SQL Alias?", a: "A temporary name assigned to a table or column to make queries more readable", o: ["A temporary name assigned to a table or column to make queries more readable", "A permanent schema change made to primary key columns", "An encrypted login credential used for database access control", "An alternative backup file path storage identifier"], c: "SQL Alias and Views" },
+        { q: "Which SQL keyword is used to introduce an alias identifier during column projection or table reference mapping?", a: "AS", o: ["LIKE", "INTO", "USING", "AS"], c: "SQL Alias and Views" },
+        { q: "What statement accurately describes an SQL View structural object?", a: "A virtual table structure driven by an underlying query expression", o: ["A fast physical storage table segment dedicated to indexes", "A virtual table structure driven by an underlying query expression", "A localized temporary table that clears when the server restarts", "A hardware monitoring dashboard metric panel"], c: "SQL Alias and Views" },
+        { q: "Which of the following is a primary security or organizational advantage of deploying database views?", a: "They hide sensitive columns by exposing only specific permitted attributes", o: ["They double database write performances and transaction commits", "They remove the need for defining relationships between entities", "They hide sensitive columns by exposing only specific permitted attributes", "They enforce strict normalization across raw external spreadsheets"], c: "SQL Alias and Views" },
+        { q: "What command removes a previously defined View structural schema object from the database catalog?", a: "DROP VIEW view_name;", o: ["DROP VIEW view_name;", "DELETE VIEW view_name;", "REMOVE VIEW view_name;", "CLEAR VIEW view_name;"], c: "SQL Alias and Views" },
+        { q: "Under which condition is a database view generally restricted from performing direct record UPDATE actions?", a: "If the view definition includes aggregate calculations, GROUP BY clauses, or set operations", o: ["If the query lacks an explicit schema alias layout", "If it pulls character or alphanumeric data items", "If the query runs against an indexed source database table", "If the view definition includes aggregate calculations, GROUP BY clauses, or set operations"], c: "SQL Alias and Views" },
+        { q: "How do you query or view the records hidden inside a newly constructed view instance named StaffView?", a: "SELECT * FROM StaffView;", o: ["FETCH ALL FROM StaffView;", "SELECT * FROM StaffView;", "EXECUTE QUERY ON StaffView;", "OPEN VIEW REWARDS FOR StaffView;"], c: "SQL Alias and Views" },
+        { q: "When assigning a table alias name like 'SELECT e.Name FROM Employees e', where does the alias remain valid?", a: "Exclusively for the duration of that single query execution block", o: ["Exclusively for the duration of that single query execution block", "Across all active open user sessions until database logout", "Permanently inside the underlying database client software", "Only if defined by a database system administrator"], c: "SQL Alias and Views" },
+        { q: "If a view query links two physical base tables, what capability is typically restricted for DML updates through that view?", a: "You generally cannot modify columns across multiple base tables simultaneously", o: ["You can only run SELECT statements on odd numbered days", "You cannot use numeric filter keys", "You generally cannot modify columns across multiple base tables simultaneously", "It requires a complete server reboot to refresh"], c: "SQL Alias and Views" },
+        { q: "Can an SQL view definition query reference and incorporate another view object in its FROM expression block?", a: "Yes, views can build on top of other views to provide layered abstractions", o: ["No, nesting views throws severe cross-reference syntax bugs", "Yes, views can build on top of other views to provide layered abstractions", "Only if the root view possesses no unique indexes", "Yes, but it only works if both views are saved in external flat CSV formats"], c: "SQL Alias and Views" },
+
+        // SECTION 4: QUERY OPTIMIZATION
+        { q: "What is the fundamental target objective behind Query Optimization procedures?", a: "Reducing execution cost, time, and computing resources", o: ["Reducing execution cost, time, and computing resources", "Normalizing tables beyond Third Normal Form (3NF)", "Converting standard data strings into XML files", "Enforcing automated user-password rotation rules"], c: "Query Optimization" },
+        { q: "In relational algebra execution plans, what operational step does the Greek letter Sigma (σ) symbolize?", a: "Selection (row filtering based on a condition)", o: ["Projection (choosing columns)", "Cartesian cross product", "Set Intersection operations", "Selection (row filtering based on a condition)"], c: "Query Optimization" },
+        { q: "In query tree execution plans, which algebraic operational symbol does Pi (Π) represent?", a: "Projection (isolating and selecting specific columns)", o: ["Natural Table Join execution paths", "Sorting sequences on primary keys", "Projection (isolating and selecting specific columns)", "Aggregate group calculations"], c: "Query Optimization" },
+        { q: "What core heuristic rule is universally applied to optimize raw query trees?", a: "Push Selection (σ) operations down early in the execution plan", o: ["Delay filtering as late as possible", "Push Selection (σ) operations down early in the execution plan", "Convert all explicit JOIN logic to full Cartesian cross products", "Avoid using column indexes entirely"], c: "Query Optimization" },
+        { q: "Why is pushing selection operators down early along query tree branches highly effective?", a: "It reduces row count early, speeding up heavy subsequent operations like JOINS", o: ["It reduces row count early, speeding up heavy subsequent operations like JOINS", "It automatically creates random table files on memory paths", "It turns relational structures into fast non-relational JSON models", "It guarantees total immunity against hardware server crashes"], c: "Query Optimization" },
+        { q: "What components are represented by the leaf nodes in a query tree visualization structure?", a: "The base physical database source tables", o: ["The final output column projections", "Nested aggregate filter structures", "Intermediate memory sorting blocks", "The base physical database source tables"], c: "Query Optimization" },
+        { q: "What command prefix exposes the query execution plan chosen by the database optimization engine?", a: "EXPLAIN SELECT", o: ["VERIFY SELECT", "EXPLAIN SELECT", "SHOW TREE SELECT", "OPTIMIZE NOW SELECT"], c: "Query Optimization" },
+        { q: "Why is standard filtering on index columns better than processing them inside functions like 'YEAR(order_date) = 2023'?", a: "Wrapping columns in functions usually prevents the engine from leveraging existing column indexes", o: ["It requires less typing for database entry operators", "It forces the query tree to drop all projection leaf components", "Wrapping columns in functions usually prevents the engine from leveraging existing column indexes", "It enables automated multi-field data scrubbing workflows"], c: "Query Optimization" },
+        { q: "What acronym defines the database mechanism that manages query plans, calculates metrics, and selects optimal access paths?", a: "CBO (Cost-Based Optimizer)", o: ["CBO (Cost-Based Optimizer)", "MDM (Master Data Manager)", "SOA (Service Oriented Architecture)", "DDL (Data Definition Layout)"], c: "Query Optimization" },
+        { q: "What is a Common Table Expression (CTE) introduced by the WITH keyword used for in query writing?", a: "Breaking down highly complex query segments into readable, modular temporary result sets", o: ["Encrypting transactional transport layers across firewalls", "Forcing hard physical disk allocation constraints", "Breaking down highly complex query segments into readable, modular temporary result sets", "Wiping duplicates through automated data warehouse cleaning loops"], c: "Query Optimization" },
+
+        // SECTION 5: DATA ADMINISTRATION
+        { q: "How does the core focus of Data Administration differ from Database Administration?", a: "Data Administration is a high-level corporate function focused on overall management of data policies and strategy, while Database Administration focuses on physical technical implementations", o: ["Data administration manages server hardware wiring layouts exclusively", "Data Administration is a high-level corporate function focused on overall management of data policies and strategy, while Database Administration focuses on physical technical implementations", "Database administration handles only non-relational cloud networks", "There is zero role distinction between both definitions in modern organizations"], c: "Data and Database Administration" },
+        { q: "In data concurrency control, what characterizes a pessimistic locking approach strategy?", a: "Locking resource records early to actively block other transactions from modifying them until the lock releases", o: ["Assuming conflicts are extremely rare and checking for violations at transaction commit time", "Wiping rows anytime two users attempt to read records simultaneously", "Forcing data conversions to flat text files", "Locking resource records early to actively block other transactions from modifying them until the lock releases"], c: "Data and Database Administration" },
+        { q: "In concurrency control mechanisms, what defines an optimistic locking approach?", a: "Assuming conflicts are rare, allowing changes without locks, and validating for conflict points during the final transaction commit phase", o: ["Assuming conflicts are rare, allowing changes without locks, and validating for conflict points during the final transaction commit phase", "Forcing database administrators to manual monitor system transaction histories", "Restricting users to read-only views on weekends", "Pre-allocating system storage parameters across multiple disks"], c: "Data and Database Administration" },
+        { q: "Which tool serves as an organization's central informational repository containing definitions, data structures, and relationships?", a: "Data Dictionary / Information Repository", o: ["Transaction Logger", "Heartbeat Monitor", "Data Dictionary / Information Repository", "RAID Controller Matrix"], c: "Data and Database Administration" },
+        { q: "What regulatory law forces strict corporate database compliance, data trail auditing, and financial verification safety controls?", a: "Sarbanes-Oxley (SOX) Act", o: ["HIPAA", "Sarbanes-Oxley (SOX) Act", "DMCA", "IEEE standard 802.11"], c: "Data and Database Administration" },
+        { q: "What database recovery strategy involves restoring a backup copy and playing all subsequent committed transactions forward from the log?", a: "Forward Recovery (Rollforward)", o: ["Backward Recovery (Rollback)", "Optimistic Concurrency validation", "Database Striping optimization", "Forward Recovery (Rollforward)"], c: "Data and Database Administration" },
+        { q: "When a transaction aborts midway, what recovery technique uses transaction logs to reverse uncommitted modifications backward?", a: "Backward Recovery (Rollback)", o: ["Backward Recovery (Rollback)", "Forward Recovery (Rollforward)", "Dynamic Schema translation", "Database Tuning partition setup"], c: "Data and Database Administration" },
+        { q: "Which database performance tuning step aims to optimize application-level processing?", a: "Modifying, tuning, and indexing SQL code inside application routines", o: ["Purchasing more physical RAM modules", "Rewriting the operating system kernel execution paths", "Modifying, tuning, and indexing SQL code inside application routines", "Changing hardware RAID array configuration models"], c: "Data and Database Administration" },
+        { q: "According to industry downtime metrics from Mullins (2002), which corporate domain suffers the highest approximate hourly cost during a database outage?", a: "Financial Services / Brokerage & Card Processing operations", o: ["Retail/Tele-sales", "Financial Services / Brokerage & Card Processing operations", "Logistics and Shipping services", "Travel and Reservation centers"], c: "Data and Database Administration" },
+        { q: "Distributing files systematically across physical disk tracks to prevent single hardware channel congestion bottlenecks is known as:", a: "Striping / File distribution balance", o: ["Normalization", "Repository nesting", "Encryption masking", "Striping / File distribution balance"], c: "Data and Database Administration" },
+
+        // SECTION 6: DATA QUALITY
+        { q: "What organizational framework oversees high-level policy coordination, stewardship across business groups, and data asset management?", a: "Data Governance", o: ["Data Governance", "Transaction Optimization", "Service Component Architecture", "Data Warehouse mining"], c: "Data Quality and Integration" },
+        { q: "Who is the dedicated professional responsible for resolving system data integration bugs, defining metrics, and ensuring applications align with quality goals?", a: "Data Steward", o: ["Systems Hardware Technician", "Application Desk Operator", "Data Steward", "Network Firewall Administrator"], c: "Data Quality and Integration" },
+        { q: "What reason describes a primary cause behind poor data quality inside complex corporate database tracking arrays?", a: "Redundant data entry inputs, lack of corporate standards, and old legacy system data migration mismatches", o: ["Forcing tables into Third Normal Form constraints", "Redundant data entry inputs, lack of corporate standards, and old legacy system data migration mismatches", "Using fast JSON non-tabular objects", "Restricting developer access permissions to application test boxes"], c: "Data Quality and Integration" },
+        { q: "What core operational lifecycle does the critical acronym ETL represent within data warehouse management workflows?", a: "Extract, Transform, Load", o: ["Encryption, Transformation, Logging", "Enterprise Transmission Layer", "Execution, Testing, Loading", "Extract, Transform, Load"], c: "Data Quality and Integration" },
+        { q: "Converting temperature items systematically using the equation C = 5(F-32)/9 inside an ETL workflow is an example of what transformation type?", a: "Algorithmic single-field transformation", o: ["Algorithmic single-field transformation", "Table lookup mapping validation", "Record level table aggregation", "Relational database denormalization"], c: "Data Quality and Integration" },
+        { q: "What process matches input abbreviations like state codes AL, AK, AZ against a separate source reference key map to extract full descriptions?", a: "Table lookup single-field transformation", o: ["Matrix algebra striping", "Multi-field splitting", "Table lookup single-field transformation", "Concurrency rollforward recovery"], c: "Data Quality and Integration" },
+        { q: "What record-level transformation function aggregates data items from highly detailed transactional tables into general summary tiers?", a: "Aggregation", o: ["Normalization", "Aggregation", "Partitioning", "Selection"], c: "Data Quality and Integration" },
+        { q: "What approach provides a single, centralized, consistent consumer and product profile mapping definition across an entire enterprise footprint?", a: "MDM (Master Data Management)", o: ["Cost-Based Query Tree parsing", "Optimistic isolation locking", "Wide Column Store design", "MDM (Master Data Management)"], c: "Data Quality and Integration" },
+        { q: "Consolidating user records from independent departments into one comprehensive master database registry layout is an example of:", a: "Data Integration", o: ["Data Integration", "Query optimization tuning", "Transaction Rollback sequencing", "Index-tree fragmentation"], c: "Data Quality and Integration" },
+        { q: "What dimension of data quality tracks whether values are populated completely and are not missing required entries?", a: "Completeness", o: ["Timeliness", "Currency", "Completeness", "Uniqueness"], c: "Data Quality and Integration" },
+
+        // SECTION 7: DATA WAREHOUSE
+        { q: "What are the four core structural characteristics defining a classic corporate Data Warehouse asset container?", a: "Subject-oriented, Integrated, Time-variant, Non-updatable", o: ["Temporary, Volatile, Unstructured, Application-Specific", "Subject-oriented, Integrated, Time-variant, Non-updatable", "Tabular, Optimistic, Normal, Transient", "Distributed, Dynamic, Schema-free, Transactional"], c: "Data Warehouse" },
+        { q: "What is a Data Mart?", a: "A data warehouse repository whose scope is limited or focused on a single line of business department", o: ["A data warehouse repository whose scope is limited or focused on a single line of business department", "A e-commerce system that trades cloud data configurations online", "A staging folder used exclusively to archive aborted transaction logs", "A backup copy stored on offline magnetic tape nodes"], c: "Data Warehouse" },
+        { q: "Why are corporate data warehouses classified as 'Non-updatable'?", a: "They are read-only platforms optimized for analytical queries, periodically refreshed via batch loading", o: ["They lack a relational database engine layer", "Hard drive read-write headers physically lock up upon data ingest", "Security configurations allow system access to database administrators only", "They are read-only platforms optimized for analytical queries, periodically refreshed via batch loading"], c: "Data Warehouse" },
+        { q: "In dimensional modeling schema layouts, what components form a standard Star Schema structure?", a: "A central numeric Fact Table closely surrounded by descriptive Dimension Tables", o: ["Multiple normalized parent-child nested entity tables", "An unordered collection of schema-free JSON document stores", "A central numeric Fact Table closely surrounded by descriptive Dimension Tables", "Alternating rows of XML schemas and index structures"], c: "Data Warehouse" },
+        { q: "What information does a central Fact Table typically contain within analytical warehouse schemas?", a: "Numerical metrics, business measurements, and foreign key pointers to surrounding dimensions", o: ["Numerical metrics, business measurements, and foreign key pointers to surrounding dimensions", "General text employee profiles and business names", "Server transactional history rollbacks", "Security clearance passwords and login encryption hashes"], c: "Data Warehouse" },
+        { q: "The representation of metrics and analytical data configurations in graphical, chart, or multimedia dashboard layouts for human analysis is known as:", a: "Data Visualization", o: ["Data Mining", "Data Visualization", "Relational Algebra projection", "Structured Metadata parsing"], c: "Data Warehouse" },
+        { q: "What technique involves searching for hidden patterns, correlations, or unexpected trends inside large historical analytical datasets using statistical and AI tools?", a: "Data Mining", o: ["Concurrency Isolation checking", "Schema translation", "Database Tuning normalization", "Data Mining"], c: "Data Warehouse" },
+        { q: "What data mining function uses an 'if... then' logical modeling format to discover or test decision propensity rules?", a: "Decision tree induction", o: ["Decision tree induction", "Regression analysis", "Fractals compression", "Case-based reasoning"], c: "Data Warehouse" },
+        { q: "What describes the information gap that drives enterprises to adapt data warehousing frameworks?", a: "The discrepancy between raw data availability on operational platforms and the actual informational needs of strategic executive managers", o: ["A lack of physical space inside local hardware server rooms", "System latency spikes across long-distance network cables", "The discrepancy between raw data availability on operational platforms and the actual informational needs of strategic executive managers", "The cost boundary split of deploying cloud computing resources"], c: "Data Warehouse" },
+        { q: "What data mining technique focuses specifically on discovering subgroups or segmenting databases based on historical behavior metrics?", a: "Clustering and signal processing", o: ["Regression", "Clustering and signal processing", "Sequence association", "Fractal layout modeling"], c: "Data Warehouse" },
+
+        // SECTION 8: APP DEVELOPMENT
+        { q: "What three logical layers form the foundation of distributed Client/Server application components?", a: "Presentation Logic, Processing Logic, and Storage Logic", o: ["Presentation Logic, Processing Logic, and Storage Logic", "JavaScript layout, Python routines, and NoSQL buckets", "SQL queries, View aliases, and Query tree branches", "Network routers, System hardware, and User accounts"], c: "Database Application Development" },
+        { q: "In application design frameworks, what task constitutes the core focus of Presentation Logic?", a: "Managing user interface menus, keyboard inputs, and screen monitors", o: ["Executing database transaction backups", "Processing underlying business validation expressions", "Managing user interface menus, keyboard inputs, and screen monitors", "Compressing tables into flat text files"], c: "Database Application Development" },
+        { q: "How does a 3-tier database application deployment model differ from a standard 2-tier application setup?", a: "A 3-tier model isolates business processing rules onto a dedicated Application Server between the client interface and backend database storage", o: ["A 3-tier architecture eliminates the need for any storage server logic", "A 3-tier model isolates business processing rules onto a dedicated Application Server between the client interface and backend database storage", "A 2-tier layout handles cloud connections exclusively", "A 3-tier structure runs only on non-relational database formats"], c: "Database Application Development" },
+        { q: "What data interchange standard uses custom tags to wrap values, fostering smooth communications across heterogeneous platforms?", a: "XML (eXtensible Markup Language)", o: ["HTML", "COBOL", "RAID", "XML (eXtensible Markup Language)"], c: "Database Application Development" },
+        { q: "What protocol acts as the messaging structure standard that wraps XML transaction messages transferred over HTTP in Web Services workflows?", a: "SOAP (Simple Object Access Protocol)", o: ["SOAP (Simple Object Access Protocol)", "WSDL", "XQuery", "FTP"], c: "Database Application Development" },
+        { q: "What language is designed to search, filter, extract, and return data elements specifically from native XML documents?", a: "XQuery", o: ["Relational Algebra", "DML Update commands", "XQuery", "JavaScript"], c: "Database Application Development" },
+        { q: "What architecture model describes a collection of self-contained services communicating via loose data passes to complete corporate activities?", a: "SOA (Service Oriented Architecture)", o: ["MDM Hub Architecture", "SOA (Service Oriented Architecture)", "2-Tier Thick Client Setup", "Star Schema Mapping Array"], c: "Database Application Development" },
+        { q: "What document standard describes a web service's capabilities, location, and parameters via an XML layout format?", a: "WSDL (Web Services Description Language)", o: ["SOAP Envelope", "JSON schema", "CTE expression block", "WSDL (Web Services Description Language)"], c: "Database Application Development" },
+        { q: "What language environment is typically leveraged to handle 3-tier web server-side logic in a Java-centric enterprise setup?", a: "JSP (JavaServer Pages) / Servlets", o: ["JSP (JavaServer Pages) / Servlets", "VB.NET", "MS Access", "Native CSS"], c: "Database Application Development" },
+        { q: "In application development, what does an API connection driver bridge like JDBC or ODBC facilitate?", a: "Allowing application programs to communicate with and execute queries on a database server", o: ["High-speed server motherboard component wiring connectivity", "Forcing database tables to drop duplicate rows automatically", "Allowing application programs to communicate with and execute queries on a database server", "Automating data visualizations on user dashboards"], c: "Database Application Development" },
+
+        // SECTION 9: NO SQL
+        { q: "What alternative umbrella industry terminology defines non-relational database storage platforms?", a: "NoSQL", o: ["NewSQL", "NoSQL", "XML-Only", "Anti-Tabular"], c: "Non-Relational Databases" },
+        { q: "Which structural option is characteristically absent from native non-relational database architectures?", a: "Fixed rigid tables, rows, primary keys, and foreign key constraints", o: ["Fixed rigid tables, rows, primary keys, and foreign key constraints", "Scalable configuration options", "Key-value or object storage formats", "Data retrieval mechanism methods"], c: "Non-Relational Databases" },
+        { q: "What database category describes MongoDB and Couchbase implementations?", a: "Document Store engines", o: ["Key-Value Store platforms", "Graph Database networks", "Document Store engines", "Wide Column Store clusters"], c: "Non-Relational Databases" },
+        { q: "What data storage type defines Redis, which operates primarily in-memory for lightning-fast caching loops?", a: "Key-Value Store", o: ["Document Store", "Relational View model", "Wide Column layout", "Key-Value Store"], c: "Non-Relational Databases" },
+        { q: "Apache Cassandra is purpose-built for high availability and big data management under what NoSQL structure category?", a: "Wide Column Store", o: ["Graph database mapping", "Wide Column Store", "Object nested layout", "JSON flat dictionary"], c: "Non-Relational Databases" },
+        { q: "What does the lightweight, text-based data interchange format acronym JSON represent?", a: "JavaScript Object Notation", o: ["JavaScript Object Notation", "Joint System Optimization Node", "Java Server Ordered Matrix", "Journaled Storage Operator Net"], c: "Non-Relational Databases" },
+        { q: "In JSON files, what characters enclose an unordered collection of key-value pair objects?", a: "Curly braces { }", o: ["Square brackets [ ]", "Angle brackets < >", "Curly braces { }", "Parentheses ( )"], c: "Non-Relational Databases" },
+        { q: "Inside JSON formats, ordered lists of values or elements are defined as arrays and enclosed using:", a: "Square brackets [ ]", o: ["Curly braces { }", "Square brackets [ ]", "Quotation marks \" \"", "Backslashes \\ \\"], c: "Non-Relational Databases" },
+        { q: "Which data type is NOT directly supported by native JSON data attribute layouts?", a: "SQL Blob / Relational Algebra tree pointer", o: ["Boolean (true/false)", "Number (e.g., 42, 3.14)", "Null", "SQL Blob / Relational Algebra tree pointer"], c: "Non-Relational Databases" },
+        { q: "What specific format does MongoDB translate its JSON documents into for internal binary storage optimization?", a: "BSON (Binary JSON)", o: ["BSON (Binary JSON)", "XML text layout", "WSDL encoding format", "CSV data line sheet"], c: "Non-Relational Databases" },
+
+        // SECTION 10: ADVANCED / COMPREHENSIVE CONCEPTS
+        { q: "What operational conflict can arise if a database administrator relies on too many physical row indexes?", a: "Write performances degrade significantly because every INSERT, UPDATE, and DELETE statement must rebuild the index trees", o: ["SELECT statement queries will crash with syntax faults", "The database will automatically drop its view objects", "Write performances degrade significantly because every INSERT, UPDATE, and DELETE statement must rebuild the index trees", "It changes the database schema model into an XML structure"], c: "Synthesis Concepts" },
+        { q: "In 3-tier application layouts, why are database access connection parameters explicitly separated from client presentations?", a: "Security protection; preventing clients from seeing database credentials or directly tampering with data connections", o: ["To increase the size of physical system data files", "Security protection; preventing clients from seeing database credentials or directly tampering with data connections", "To make sure the application can run completely offline without internet loops", "To force the system to use pessimistic locking parameters exclusively"], c: "Synthesis Concepts" },
+        { q: "What structural problem does data integration normalization intentionally solve when splitting messy single flat sheets?", a: "Eliminating data anomalies and structural redundancies to yield smaller, well-structured relations", o: ["Eliminating data anomalies and structural redundancies to yield smaller, well-structured relations", "Turning relational tables into schema-free JSON objects", "Restricting network firewall entry parameters", "Forcing system batch refreshes to run only on year-end dates"], c: "Synthesis Concepts" },
+        { q: "Why are transactional databases optimized for OLTP (Online Transaction Processing) kept separate from analytical Data Warehouses?", a: "Heavy analytical queries on a warehouse can slow down or lock active day-to-day business data operations", o: ["Because OLTP systems cannot accept text string characters", "Warehouse designs run only on legacy mainframe hardware platforms", "To prevent non-relational databases from utilizing XML layouts", "Heavy analytical queries on a warehouse can slow down or lock active day-to-day business data operations"], c: "Synthesis Concepts" },
+        { q: "When designing an integrated corporate warehouse repository, what step resolves conflicting data naming layouts across source systems?", a: "Enforcing consistent naming conventions, data formatting rules, and encoding structures during the ETL transform phase", o: ["Running a dynamic backward recovery rollback loop", "Enforcing consistent naming conventions, data formatting rules, and encoding structures during the ETL transform phase", "Forcing all database column fields to be saved as unique keys", "Transitioning the system configuration into a Redis in-memory cache layer"], c: "Synthesis Concepts" },
+        { q: "What relational condition is strictly required when combining the outputs of two SELECT queries with UNION or INTERSECT?", a: "The queries must project the exact same number of columns with matching compatible data types in corresponding order", o: ["Both tables must share the same physical primary key tracking names", "The query expressions must contain a WHERE filter constraint attribute", "The queries must project the exact same number of columns with matching compatible data types in corresponding order", "Both tables must be fully denormalized"], c: "Synthesis Concepts" },
+        { q: "Under what constraint condition must a database view include base attributes to handle row INSERT operations safely?", a: "All NOT NULL columns from the underlying base table must be included in the view query blueprint", o: ["All NOT NULL columns from the underlying base table must be included in the view query blueprint", "The view must project character datatypes only", "The base table must not possess any active index paths", "The system must be configured to run optimistic concurrency models"], c: "Synthesis Concepts" },
+        { q: "In NoSQL systems, what design scenario is a primary reason to prefer a Document Store over traditional relational setups?", a: "When dealing with unstructured, changing, or diverse data properties that demand a flexible schema", o: ["When data structures are rigid, unyielding, and require complex normalization mapping layers", "When you need to run forward recovery transaction rollforward logs continuously", "To reduce the size of physical system storage track units", "When dealing with unstructured, changing, or diverse data properties that demand a flexible schema"], c: "Synthesis Concepts" },
+        { q: "What database event triggers an automatic rollback recovery sequence within a running enterprise application?", a: "An unexpected transaction abort, system runtime crash, or deadlock interruption condition", o: ["A successful user log execution sequence on weekend timelines", "An unexpected transaction abort, system runtime crash, or deadlock interruption condition", "Calling an un-nested SQL view statement alias", "Running an EXPLAIN query plan operation prefix"], c: "Synthesis Concepts" },
+        { q: "Ultimately, what organizational metric defines data as possessive of high 'Data Quality'?", a: "If the data is correct, complete, timely, and fit for its intended operational or analytical use inside the business", o: ["If the data is correct, complete, timely, and fit for its intended operational or analytical use inside the business", "If the underlying files are stored using binary formatting exclusively", "If the database footprint takes less than 10 Megabytes of cloud drive room", "If it is managed solely by network firewall administrators"], c: "Synthesis Concepts" }
+    ];
+
+    let currentQuestionIndex = 0;
+    let userScore = 0;
+    let isAnswered = false;
+
+    // Initialize Quiz
+    window.onload = function() {
+        showQuestion();
+    };
+
+    function showQuestion() {
+        isAnswered = false;
+        
+        // Update displays
+        document.getElementById('progress-display').innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+        document.getElementById('score-display').innerText = `Score: ${userScore}`;
+        
+        const currentData = quizData[currentQuestionIndex];
+        document.getElementById('category-display').innerText = currentData.c;
+        document.getElementById('question-display').innerText = currentData.q;
+        
+        // Hide feedback panels & next actions
+        const feedbackBox = document.getElementById('feedback-box');
+        feedbackBox.style.display = 'none';
+        feedbackBox.className = 'feedback-panel';
+        document.getElementById('next-button').style.display = 'none';
+
+        // Display multiple choice selection options
+        const optionsBox = document.getElementById('options-box');
+        optionsBox.innerHTML = '';
+        
+        currentData.o.forEach(option => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerText = option;
+            button.onclick = function() { checkAnswer(button, option); };
+            optionsBox.appendChild(button);
+        });
+    }
+
+    function checkAnswer(selectedButton, selectedText) {
+        if (isAnswered) return; // Freeze selections once clicked
+        isAnswered = true;
+
+        const currentData = quizData[currentQuestionIndex];
+        const optionsBox = document.getElementById('options-box');
+        const buttons = optionsBox.getElementsByClassName('option-btn');
+        const feedbackBox = document.getElementById('feedback-box');
+        const nextButton = document.getElementById('next-button');
+
+        // Disable all buttons to freeze screen state
+        for (let btn of buttons) {
+            btn.disabled = true;
+            // Mark the absolute correct option implicitly for study view
+            if (btn.innerText === currentData.a) {
+                btn.classList.add('correct');
+            }
+        }
+
+        // Evaluate validation logic
+        if (selectedText === currentData.a) {
+            userScore++;
+            document.getElementById('score-display').innerText = `Score: ${userScore}`;
+            feedbackBox.innerText = "Correct! Great understanding of the topic concept.";
+            feedbackBox.classList.add('correct-msg');
+        } else {
+            selectedButton.classList.add('incorrect');
+            feedbackBox.innerText = `Incorrect. The absolute correct choice was: "${currentData.a}"`;
+            feedbackBox.classList.add('incorrect-msg');
+        }
+
+        feedbackBox.style.display = 'block';
+        nextButton.style.display = 'block';
+    }
+
+    function loadNextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            showQuestion();
+        } else {
+            showFinalResults();
+        }
+    }
+
+    function showFinalResults() {
+        document.getElementById('quiz-box').style.display = 'none';
+        document.getElementById('results-box').style.display = 'block';
+        
+        const finalScoreBox = document.getElementById('final-score-display');
+        finalScoreBox.innerText = `${userScore} / ${quizData.length}`;
+        
+        const commentBox = document.getElementById('final-comment-display');
+        const percentage = (userScore / quizData.length) * 100;
+        if (percentage >= 90) {
+            commentBox.innerText = "Master tier! Outstanding comprehension of database technologies and information management concepts.";
+        } else if (percentage >= 70) {
+            commentBox.innerText = "Great job! You passed the assessment review successfully.";
+        } else {
+            commentBox.innerText = "Keep reviewing your core course resources and notes to strengthen knowledge points.";
+        }
+    }
+
+    function restartQuiz() {
+        currentQuestionIndex = 0;
+        userScore = 0;
+        document.getElementById('results-box').style.display = 'none';
+        document.getElementById('quiz-box').style.display = 'block';
+        showQuestion();
+    }
+</script>
+
+</body>
+</html>
